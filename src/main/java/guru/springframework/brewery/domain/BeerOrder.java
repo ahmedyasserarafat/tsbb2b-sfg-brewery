@@ -28,6 +28,7 @@ import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -63,4 +64,14 @@ public class BeerOrder extends BaseEntity {
 
     private OrderStatusEnum orderStatus = OrderStatusEnum.NEW;
     private String orderStatusCallbackUrl;
+
+    public void addBeerOrderLine(BeerOrderLine beerOrderLine){
+        if(this.beerOrderLines==null){
+           this.beerOrderLines=new HashSet<BeerOrderLine>();
+        }
+        this.beerOrderLines.add(beerOrderLine);
+        beerOrderLine.setBeerOrder(this);
+
+
+    }
 }

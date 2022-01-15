@@ -24,6 +24,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -37,21 +38,24 @@ public class DefaultBreweryLoader implements CommandLineRunner {
     private final BeerRepository beerRepository;
     private final BeerInventoryRepository beerInventoryRepository;
     private final BeerOrderRepository beerOrderRepository;
+    private final BeerOrderLineRepository beerOrderLineRepository;
     private final CustomerRepository customerRepository;
 
     public DefaultBreweryLoader(BreweryRepository breweryRepository,
                                 BeerRepository beerRepository, BeerInventoryRepository beerInventoryRepository,
-                                BeerOrderRepository beerOrderRepository, CustomerRepository customerRepository) {
+                                BeerOrderRepository beerOrderRepository, CustomerRepository customerRepository,
+                                BeerOrderLineRepository beerOrderLineRepository) {
         this.breweryRepository = breweryRepository;
         this.beerRepository = beerRepository;
         this.beerInventoryRepository = beerInventoryRepository;
         this.beerOrderRepository = beerOrderRepository;
         this.customerRepository = customerRepository;
+        this.beerOrderLineRepository=beerOrderLineRepository;
     }
 
     @Override
     public void run(String... args) throws Exception {
-        loadBreweryData();
+       loadBreweryData();
     }
 
     private void loadBreweryData() {
@@ -111,21 +115,36 @@ public class DefaultBreweryLoader implements CommandLineRunner {
                     .customerName("Test 1").apiKey(UUID.randomUUID())
                     .build());
 
-            Set<BeerOrderLine> orderLines1 = new HashSet<>();
-            orderLines1.add(BeerOrderLine.builder().beer(galaxyCat).orderQuantity(15).quantityAllocated(0).build());
-            orderLines1.add(BeerOrderLine.builder().beer(pinball).orderQuantity(7).quantityAllocated(0).build());
+            List<BeerOrder> newOrders = beerOrderRepository.findAllByOrderStatus(OrderStatusEnum.NEW);
+
+            if (newOrders.size() > 0 ) {
+
+                System.out.println("Number of orders found to allocate: " + newOrders.size());
+
+            }
+
+            //Set<BeerOrderLine> orderLines1 = new HashSet<>();
+            //orderLines1.add(BeerOrderLine.builder().beer(galaxyCat).orderQuantity(15).quantityAllocated(0).build());
+            //orderLines1.add(BeerOrderLine.builder().beer(pinball).orderQuantity(7).quantityAllocated(0).build());
 
             BeerOrder testOrder1 = beerOrderRepository.save(BeerOrder.builder()
                     .orderStatus(OrderStatusEnum.NEW)
                     .customer(testCustomer)
                     .customerRef("testOrder1")
                     .orderStatusCallbackUrl("http://example.com/post")
-                    .beerOrderLines(orderLines1)
+                    //.beerOrderLines(orderLines1)
                     .build());
+           // beerOrderRepository.save(testOrder1);
+      /*      testOrder1.addBeerOrderLine(BeerOrderLine.builder().beer(galaxyCat).orderQuantity(15).quantityAllocated(0).beerOrder(testOrder1).build());
+            testOrder1.addBeerOrderLine(BeerOrderLine.builder().beer(pinball).orderQuantity(7).quantityAllocated(0).beerOrder(testOrder1).build());
+        */    //orderLines1.forEach(line -> line.setBeerOrder(testOrder1));
+           // beerOrderRepository.save(testOrder1);
 
-            orderLines1.forEach(line -> line.setBeerOrder(testOrder1));
+            beerOrderLineRepository.save(BeerOrderLine.builder().beer(galaxyCat).orderQuantity(15).quantityAllocated(0).
+                    beerOrder(testOrder1).build());
+            beerOrderLineRepository.save(BeerOrderLine.builder().beer(pinball).orderQuantity(7).quantityAllocated(0).
+                    beerOrder(testOrder1).build());
 
-            beerOrderRepository.save(testOrder1);
         }
     }
 }

@@ -127,12 +127,20 @@ class BeerControllerTest {
         @DisplayName("Test list beers - no parameters")
         @Test
         void testListBeers() throws Exception {
-            mockMvc.perform(get("/api/v1/beer")
+            DateTimeFormatter dp=DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
+            System.out.println("dddddddddd ---"+validBeer.getCreatedDate() +"------"+dp.format(validBeer.getCreatedDate()));
+            System.out.println(beerPagedList.getContent().get(0));
+
+            MvcResult result=mockMvc.perform(get("/api/v1/beer")
                         .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                     .andExpect(jsonPath("$.content", hasSize(2)))
-                    .andExpect(jsonPath("$.content[0].id", is(validBeer.getId().toString())));
+                    .andExpect(jsonPath("$.content[0].createdDate", is(dp.format(validBeer.getCreatedDate()))))
+                    .andExpect(jsonPath("$.content[0].id", is(validBeer.getId().toString())))
+                    .andReturn();
+
+            System.out.println(result.getResponse().getContentAsString());
         }
     }
 
@@ -142,7 +150,7 @@ class BeerControllerTest {
         objectMapper.configure(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS, true);
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
-        objectMapper.registerModule(new JavaTimeModule());
+       objectMapper.registerModule(new JavaTimeModule());
         return new MappingJackson2HttpMessageConverter(objectMapper);
     }
 }
